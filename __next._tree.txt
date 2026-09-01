@@ -1,0 +1,9 @@
+:HL["/apu-cgpa-calculator/_next/static/chunks/187jgt24zrorn.css","style"]
+:HL["/apu-cgpa-calculator/_next/static/media/190cbacfb85a6cdb-s.p.0luvy10g2ormz.woff2","font",{"crossOrigin":"","type":"font/woff2"}]
+:HL["/apu-cgpa-calculator/_next/static/media/2a65768255d6b625-s.p.3u4lli0-axodc.woff2","font",{"crossOrigin":"","type":"font/woff2"}]
+:HL["/apu-cgpa-calculator/_next/static/media/6ab71d031fe7ae3b-s.p.141jscyq52bjf.woff2","font",{"crossOrigin":"","type":"font/woff2"}]
+:HL["/apu-cgpa-calculator/_next/static/media/70e3db2de7f94926-s.p.39pl-v7c3qrze.woff2","font",{"crossOrigin":"","type":"font/woff2"}]
+:HL["/apu-cgpa-calculator/_next/static/media/80bb744e92754df7-s.p.2eihtoujcoclr.woff2","font",{"crossOrigin":"","type":"font/woff2"}]
+:HL["/apu-cgpa-calculator/_next/static/media/bec5c09c262b1b7f-s.p.3axch3fp2h9wp.woff2","font",{"crossOrigin":"","type":"font/woff2"}]
+:HL["/apu-cgpa-calculator/_next/static/media/c313dc4eda25f719-s.p.2bry8-mbc5ri0.woff2","font",{"crossOrigin":"","type":"font/woff2"}]
+0:{"tree":{"name":"","param":null,"prefetchHints":4176,"slots":{"children":{"name":"__PAGE__","param":null,"prefetchHints":4256,"slots":null}}},"staleTime":300,"buildId":"fTStcNvZp9651LkfSWkYq"}
