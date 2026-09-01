@@ -11,21 +11,23 @@
 
 :root {
   --paper: #f4f0e6;
-  --paper-2: #efe8d9;
+  --paper-2: #eae2d0;
   --ink: #17130d;
   --muted: #6d665a;
   --rule: #17130d;
   --faint: rgba(23, 19, 13, 0.14);
-  --box: rgba(23, 19, 13, 0.035);
+  --box: rgba(23, 19, 13, 0.045);
+  color-scheme: light;
 }
 .dark {
-  --paper: #14120e;
-  --paper-2: #1b1712;
+  --paper: #16130d;
+  --paper-2: #211c14;
   --ink: #ece5d6;
-  --muted: #9c9384;
+  --muted: #a89e8c;
   --rule: #ece5d6;
-  --faint: rgba(236, 229, 214, 0.16);
-  --box: rgba(236, 229, 214, 0.05);
+  --faint: rgba(236, 229, 214, 0.18);
+  --box: rgba(236, 229, 214, 0.06);
+  color-scheme: dark;
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -98,12 +100,27 @@ body::before {
 }
 .np-input:focus { outline: none; border-bottom-width: 3px; background: var(--box); }
 .np-input::placeholder { color: var(--muted); font-style: italic; }
-select.np-input { cursor: pointer; -webkit-appearance: none; appearance: none; }
 input[type="number"]::-webkit-inner-spin-button,
 input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
 
+/* select styled as a printed field with a drawn caret */
+select.np-input {
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+  padding-right: 1.2rem;
+  background-image: linear-gradient(45deg, transparent 50%, var(--ink) 50%),
+    linear-gradient(135deg, var(--ink) 50%, transparent 50%);
+  background-position: right 2px center, right 6px center;
+  background-size: 4px 4px, 4px 4px;
+  background-repeat: no-repeat;
+}
+/* themed native option list (fixes white popup in Night Edition) */
+.np-input option { background: var(--paper); color: var(--ink); }
+
 /* boxed ink panel */
 .ink-box { border: 2px solid var(--ink); background: var(--box); }
+.col-rule { border-left: 1px solid var(--faint); }
 
 /* halftone photo frame */
 .paper-photo { filter: grayscale(1) contrast(1.02); border: 1px solid var(--ink); background: var(--paper-2); }

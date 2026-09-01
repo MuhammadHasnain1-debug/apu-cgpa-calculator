@@ -14,20 +14,32 @@ import {
 
 const fmt = (n: number) => (Math.round(n * 100) / 100).toFixed(2);
 
+// APU / MQA credit-hour values (a Bachelor's totals 120 credit hours).
+const CREDIT_OPTIONS = [1, 2, 3, 4, 5, 6, 8, 10, 12, 15];
+
 const seedCourses: Course[] = [
   { id: "c1", name: "", credit: "", grade: "" },
   { id: "c2", name: "", credit: "", grade: "" },
   { id: "c3", name: "", credit: "", grade: "" },
 ];
 
+function CreditSelect({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  return (
+    <select value={value} onChange={(e) => onChange(e.target.value)} className="np-input" aria-label="Credit hours">
+      <option value="">— cr —</option>
+      {CREDIT_OPTIONS.map((c) => (
+        <option key={c} value={c}>{c} cr</option>
+      ))}
+    </select>
+  );
+}
+
 function GradeSelect({ value, onChange }: { value: string; onChange: (v: string) => void }) {
   return (
-    <select value={value} onChange={(e) => onChange(e.target.value)} className="np-input">
+    <select value={value} onChange={(e) => onChange(e.target.value)} className="np-input" aria-label="Grade">
       <option value="">— grade —</option>
       {GRADES.map((g) => (
-        <option key={g.letter} value={g.letter}>
-          {g.letter} · {g.point.toFixed(1)}
-        </option>
+        <option key={g.letter} value={g.letter}>{g.letter} · {g.point.toFixed(1)}</option>
       ))}
     </select>
   );
@@ -53,33 +65,17 @@ export default function Page() {
   useEffect(() => {
     setMounted(true);
     setDark(document.documentElement.classList.contains("dark"));
-    setDateStr(
-      new Date().toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long", year: "numeric" }),
-    );
+    setDateStr(new Date().toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long", year: "numeric" }));
     try {
       const c = localStorage.getItem("apu-courses");
       if (c) {
         const parsed = JSON.parse(c) as Course[];
-        if (Array.isArray(parsed) && parsed.length) {
-          setCourses(parsed);
-          idRef.current = parsed.length + 1;
-        }
+        if (Array.isArray(parsed) && parsed.length) { setCourses(parsed); idRef.current = parsed.length + 1; }
       }
       const p = localStorage.getItem("apu-prior");
-      if (p) {
-        const o = JSON.parse(p);
-        setUsePrior(!!o.enabled);
-        setPriorCgpa(o.cgpa ?? "");
-        setPriorCredits(o.credits ?? "");
-      }
+      if (p) { const o = JSON.parse(p); setUsePrior(!!o.enabled); setPriorCgpa(o.cgpa ?? ""); setPriorCredits(o.credits ?? ""); }
       const pl = localStorage.getItem("apu-plan");
-      if (pl) {
-        const o = JSON.parse(pl);
-        setPCgpa(o.cgpa ?? "3.00");
-        setPDone(o.done ?? "60");
-        setPNext(o.next ?? "18");
-        setPTarget(o.target ?? "3.50");
-      }
+      if (pl) { const o = JSON.parse(pl); setPCgpa(o.cgpa ?? "3.00"); setPDone(o.done ?? "60"); setPNext(o.next ?? "18"); setPTarget(o.target ?? "3.50"); }
     } catch {}
   }, []);
 
@@ -93,49 +89,32 @@ export default function Page() {
 
   useEffect(() => {
     if (!mounted) return;
-    try {
-      localStorage.setItem("apu-plan", JSON.stringify({ cgpa: pCgpa, done: pDone, next: pNext, target: pTarget }));
-    } catch {}
+    try { localStorage.setItem("apu-plan", JSON.stringify({ cgpa: pCgpa, done: pDone, next: pNext, target: pTarget })); } catch {}
   }, [pCgpa, pDone, pNext, pTarget, mounted]);
 
   function toggleTheme() {
     const next = !dark;
     setDark(next);
     document.documentElement.classList.toggle("dark", next);
-    try {
-      localStorage.setItem("apu-theme", next ? "dark" : "light");
-    } catch {}
+    try { localStorage.setItem("apu-theme", next ? "dark" : "light"); } catch {}
   }
 
-  const setCourse = (id: string, patch: Partial<Course>) =>
-    setCourses((cs) => cs.map((c) => (c.id === id ? { ...c, ...patch } : c)));
+  const setCourse = (id: string, patch: Partial<Course>) => setCourses((cs) => cs.map((c) => (c.id === id ? { ...c, ...patch } : c)));
   const addCourse = () => setCourses((cs) => [...cs, { id: `c${idRef.current++}`, name: "", credit: "", grade: "" }]);
   const removeCourse = (id: string) => setCourses((cs) => (cs.length > 1 ? cs.filter((c) => c.id !== id) : cs));
-  const clearAll = () => {
-    setCourses(seedCourses.map((c, i) => ({ ...c, id: `c${i + 1}` })));
-    idRef.current = 4;
-    setUsePrior(false);
-    setPriorCgpa("");
-    setPriorCredits("");
-  };
+  const clearAll = () => { setCourses(seedCourses.map((c, i) => ({ ...c, id: `c${i + 1}` }))); idRef.current = 4; setUsePrior(false); setPriorCgpa(""); setPriorCredits(""); };
 
   const sem = useMemo(() => computeGpa(courses), [courses]);
   const cum = useMemo(() => computeCgpa(sem, parseFloat(priorCgpa), parseFloat(priorCredits)), [sem, priorCgpa, priorCredits]);
   const shownCgpa = usePrior && cum.totalCredits > 0 ? cum.cgpa : sem.gpa;
   const shownCredits = usePrior && cum.totalCredits > 0 ? cum.totalCredits : sem.credits;
   const standing = classify(shownCgpa);
-  const plan = useMemo(
-    () => planTarget(parseFloat(pCgpa), parseFloat(pDone), parseFloat(pNext), parseFloat(pTarget)),
-    [pCgpa, pDone, pNext, pTarget],
-  );
+  const plan = useMemo(() => planTarget(parseFloat(pCgpa), parseFloat(pDone), parseFloat(pNext), parseFloat(pTarget)), [pCgpa, pDone, pNext, pTarget]);
 
-  const verdict =
-    plan.status === "achievable" ? "Achievable" :
-    plan.status === "achieved" ? "Locked In" :
-    plan.status === "impossible" ? "Out of Reach" : "—";
+  const verdict = plan.status === "achievable" ? "Achievable" : plan.status === "achieved" ? "Locked In" : plan.status === "impossible" ? "Out of Reach" : "—";
 
   return (
-    <div className="relative z-10 mx-auto max-w-5xl px-4 pb-16 pt-5 sm:px-6">
+    <div className="relative z-10 mx-auto w-full max-w-[1500px] px-4 pb-14 pt-4 sm:px-8">
       {/* top matter */}
       <div className="flex items-center justify-between kicker">
         <span>Vol. IV · No. 26</span>
@@ -147,31 +126,32 @@ export default function Page() {
       <div className="rule-2 mt-2" />
 
       {/* masthead */}
-      <header className="pt-4 text-center">
-        <div className="plate text-5xl leading-none sm:text-7xl">The Grade Gazette</div>
+      <header className="pt-3 text-center sm:pt-4">
+        <div className="plate leading-none" style={{ fontSize: "clamp(1.9rem, 7.2vw, 5rem)" }}>The Grade Gazette</div>
         <div className="double-rule mt-3 pt-1" />
         <div className="flex items-center justify-between kicker py-1">
           <span>Asia Pacific University</span>
-          <span className="smallcaps hidden sm:inline" style={{ fontStyle: "italic" }}>Numeris Veritas</span>
+          <span className="smallcaps hidden sm:inline italic">Numeris Veritas</span>
           <span>Price · Free</span>
         </div>
         <div className="rule" />
       </header>
 
-      {/* front page: lede + photo */}
-      <section className="grid gap-6 py-6 md:grid-cols-[1.35fr_1fr]">
+      {/* front page: lede · photo · contents */}
+      <section className="grid gap-6 py-6 md:grid-cols-2 lg:grid-cols-[1.5fr_1.15fr_0.85fr] lg:gap-8">
         <div className="ink-in">
           <p className="kicker">Results Day · Special Report</p>
-          <h1 className="head mt-1 text-3xl font-black leading-[1.05] sm:text-[2.7rem]">
+          <h1 className="head mt-1 font-black leading-[1.04]" style={{ fontSize: "clamp(1.9rem, 4.2vw, 3rem)" }}>
             Know Your Standing.<br />Plan Your Target.
           </h1>
           <p className="dropcap mt-3 text-[0.98rem]">
-            Enter your modules and credits below to read off your semester GPA and cumulative CGPA on
+            Enter your modules and credit hours below to read off your semester GPA and cumulative CGPA on
             Asia Pacific University&rsquo;s official grade scale. Then turn to the Forecast Desk to learn
             precisely what grades next semester would carry you to the CGPA you are chasing.
           </p>
           <p className="mt-3 italic text-[var(--muted)]">— By the Registrar&rsquo;s Desk</p>
         </div>
+
         <figure className="develop self-start">
           <img
             src={graduates.src}
@@ -184,6 +164,32 @@ export default function Page() {
             <span className="italic">The Class of 2026 mark results day.</span> — Gazette staff photo
           </figcaption>
         </figure>
+
+        {/* In This Issue */}
+        <aside className="md:col-span-2 lg:col-span-1 lg:col-rule lg:pl-8">
+          <div className="ink-box h-full p-4">
+            <p className="kicker text-center">In This Issue</p>
+            <div className="double-rule my-2" />
+            <ul className="space-y-2.5">
+              {([["calc", "The Results Desk", "Sec. A"], ["plan", "The Forecast Desk", "Sec. B"]] as const).map(([key, label, sec]) => (
+                <li key={key} className="flex items-baseline gap-2">
+                  <button onClick={() => setMode(key)} className="head font-bold hover:opacity-70">{label}</button>
+                  <span className="min-w-6 flex-1 self-end border-b border-dotted border-[var(--muted)]" />
+                  <span className="kicker whitespace-nowrap">{sec}</span>
+                </li>
+              ))}
+              <li className="flex items-baseline gap-2">
+                <span className="head font-bold">The Grade Scale</span>
+                <span className="min-w-6 flex-1 self-end border-b border-dotted border-[var(--muted)]" />
+                <span className="kicker whitespace-nowrap">Back page</span>
+              </li>
+            </ul>
+            <div className="rule my-3" />
+            <p className="text-[0.92rem] leading-relaxed italic">
+              &ldquo;Grades are a credit-weighted average — a heavy module pulls harder than a light one.&rdquo;
+            </p>
+          </div>
+        </aside>
       </section>
 
       {/* section switcher */}
@@ -191,11 +197,7 @@ export default function Page() {
       <nav className="flex flex-wrap items-center justify-center gap-x-6 gap-y-1 py-2.5 text-center">
         <span className="kicker">Today&rsquo;s Sections:</span>
         {([["calc", "The Results Desk"], ["plan", "The Forecast Desk"]] as const).map(([key, label]) => (
-          <button
-            key={key}
-            onClick={() => setMode(key)}
-            className={`head text-lg transition ${mode === key ? "font-black underline decoration-2 underline-offset-4" : "text-[var(--muted)] hover:text-[var(--ink)]"}`}
-          >
+          <button key={key} onClick={() => setMode(key)} className={`head text-lg transition ${mode === key ? "font-black underline decoration-2 underline-offset-4" : "text-[var(--muted)] hover:text-[var(--ink)]"}`}>
             {label}
           </button>
         ))}
@@ -209,19 +211,17 @@ export default function Page() {
       <div key={mode} className="reprint pt-7">
         <div key={`h-${mode}`} className="stamp mb-6 text-center">
           <p className="kicker">{mode === "calc" ? "Section A" : "Section B"} · Edition of the Day</p>
-          <h2 className="head text-4xl font-black sm:text-5xl">
+          <h2 className="head font-black" style={{ fontSize: "clamp(2rem, 5vw, 3.2rem)" }}>
             {mode === "calc" ? "The Results Desk" : "The Forecast Desk"}
           </h2>
           <p className="italic text-[var(--muted)]">
-            {mode === "calc"
-              ? "Your grades, tallied and weighted by credit."
-              : "The arithmetic of ambition — what next semester must deliver."}
+            {mode === "calc" ? "Your grades, tallied and weighted by credit." : "The arithmetic of ambition — what next semester must deliver."}
           </p>
         </div>
 
         {mode === "calc" ? (
-          <div className="grid gap-8 md:grid-cols-[1.5fr_1fr]">
-            {/* entry column */}
+          <div className="grid gap-8 md:grid-cols-[1.6fr_1fr] md:gap-10">
+            {/* entry */}
             <section>
               <label className="mb-4 flex cursor-pointer items-center gap-3">
                 <input type="checkbox" checked={usePrior} onChange={(e) => setUsePrior(e.target.checked)} className="h-4 w-4 accent-[var(--ink)]" />
@@ -241,61 +241,70 @@ export default function Page() {
                 </div>
               )}
 
-              <div className="mb-2 grid grid-cols-[1fr_66px_120px_28px] items-end gap-3">
+              {/* column headers — desktop only */}
+              <div className="mb-1 hidden grid-cols-[1fr_104px_128px_28px] items-end gap-3 sm:grid">
                 <span className="kicker">Module</span>
-                <span className="kicker text-center">Credit</span>
+                <span className="kicker">Credit hrs</span>
                 <span className="kicker">Grade</span>
                 <span />
               </div>
-              <div className="rule mb-1" />
+              <div className="rule mb-1 hidden sm:block" />
+
               <div>
                 {courses.map((c) => (
-                  <div key={c.id} className="grid grid-cols-[1fr_66px_120px_28px] items-center gap-3 border-b border-[var(--faint)] py-1.5">
+                  <div key={c.id} className="grid grid-cols-1 gap-2 border-b border-[var(--faint)] py-2.5 sm:grid-cols-[1fr_104px_128px_28px] sm:items-center sm:gap-3 sm:py-2">
                     <input value={c.name} onChange={(e) => setCourse(c.id, { name: e.target.value })} placeholder="module name (optional)" className="np-input" style={{ borderBottom: 0 }} />
-                    <input inputMode="decimal" value={c.credit} onChange={(e) => setCourse(c.id, { credit: e.target.value })} placeholder="cr" className="np-input text-center" style={{ borderBottom: 0 }} />
-                    <GradeSelect value={c.grade} onChange={(v) => setCourse(c.id, { grade: v })} />
-                    <button onClick={() => removeCourse(c.id)} aria-label="Strike module" className="head text-lg text-[var(--muted)] hover:text-[var(--ink)]">×</button>
+                    <div className="grid grid-cols-[1fr_1fr_28px] items-center gap-2 sm:contents">
+                      <CreditSelect value={c.credit} onChange={(v) => setCourse(c.id, { credit: v })} />
+                      <GradeSelect value={c.grade} onChange={(v) => setCourse(c.id, { grade: v })} />
+                      <button onClick={() => removeCourse(c.id)} aria-label="Strike module" className="head text-xl text-[var(--muted)] hover:text-[var(--ink)]">×</button>
+                    </div>
                   </div>
                 ))}
               </div>
 
-              <div className="mt-5 flex items-center gap-5">
+              <div className="mt-5 flex flex-wrap items-center gap-5">
                 <button onClick={addCourse} className="head font-bold underline decoration-2 underline-offset-4 hover:opacity-70">＋ Add a module</button>
                 <button onClick={clearAll} className="kicker hover:text-[var(--ink)]">Clear the page</button>
               </div>
+
+              <p className="mt-6 border-t border-[var(--faint)] pt-3 text-[0.9rem] italic text-[var(--muted)]">
+                Credit hours vary by module — most APU modules run 3&ndash;4, projects more. Enter each from your
+                APSpace transcript; a full Bachelor&rsquo;s totals 120 credit hours.
+              </p>
             </section>
 
             {/* standing box */}
-            <aside className="md:sticky md:top-5 h-fit ink-box p-6 text-center">
-              <p className="kicker">{usePrior && cum.totalCredits > 0 ? "Cumulative CGPA" : "Semester GPA"}</p>
-              <div className="double-rule mx-auto mt-2 w-16" />
-              <div className="head my-2 text-7xl font-black tabular-nums">{fmt(shownCgpa)}</div>
-              <p className="kicker">out of a possible 4.00</p>
-
-              <div className="rule-2 my-4" />
-              {sem.counted > 0 ? (
-                <p className="head text-2xl font-black smallcaps">{standing.label}</p>
-              ) : (
-                <p className="italic text-[var(--muted)]">Awaiting the first credit &amp; grade…</p>
-              )}
-
-              <div className="mt-5 grid grid-cols-2 divide-x divide-[var(--faint)] border-t border-[var(--faint)] pt-4">
-                <div>
-                  <div className="head text-2xl font-black tabular-nums">{shownCredits || 0}</div>
-                  <div className="kicker mt-1">Credits</div>
+            <aside className="h-fit md:sticky md:top-5">
+              <div className="ink-box p-6 text-center">
+                <p className="kicker">{usePrior && cum.totalCredits > 0 ? "Cumulative CGPA" : "Semester GPA"}</p>
+                <div className="double-rule mx-auto mt-2 w-16" />
+                <div className="head my-2 font-black tabular-nums" style={{ fontSize: "clamp(3.5rem, 12vw, 5rem)" }}>{fmt(shownCgpa)}</div>
+                <p className="kicker">out of a possible 4.00</p>
+                <div className="rule-2 my-4" />
+                {sem.counted > 0 ? (
+                  <p className="head text-2xl font-black smallcaps">{standing.label}</p>
+                ) : (
+                  <p className="italic text-[var(--muted)]">Awaiting the first credit &amp; grade…</p>
+                )}
+                <div className="mt-5 grid grid-cols-2 divide-x divide-[var(--faint)] border-t border-[var(--faint)] pt-4">
+                  <div>
+                    <div className="head text-2xl font-black tabular-nums">{shownCredits || 0}</div>
+                    <div className="kicker mt-1">Credit hrs</div>
+                  </div>
+                  <div>
+                    <div className="head text-2xl font-black tabular-nums">{sem.counted}</div>
+                    <div className="kicker mt-1">Modules</div>
+                  </div>
                 </div>
-                <div>
-                  <div className="head text-2xl font-black tabular-nums">{sem.counted}</div>
-                  <div className="kicker mt-1">Modules</div>
-                </div>
+                {usePrior && cum.totalCredits > 0 && (
+                  <p className="kicker mt-4 border-t border-[var(--faint)] pt-3">This semester alone · {fmt(sem.gpa)}</p>
+                )}
               </div>
-              {usePrior && cum.totalCredits > 0 && (
-                <p className="kicker mt-4 border-t border-[var(--faint)] pt-3">This semester alone · {fmt(sem.gpa)}</p>
-              )}
             </aside>
           </div>
         ) : (
-          <div className="grid gap-8 md:grid-cols-[1.5fr_1fr]">
+          <div className="grid gap-8 md:grid-cols-[1.6fr_1fr] md:gap-10">
             {/* forecast inputs */}
             <section>
               <p className="dropcap mb-5 text-[0.98rem]">
@@ -308,11 +317,11 @@ export default function Page() {
                   <input inputMode="decimal" value={pCgpa} onChange={(e) => setPCgpa(e.target.value)} className="np-input" />
                 </div>
                 <div>
-                  <label className="kicker mb-1 block">Credits completed</label>
+                  <label className="kicker mb-1 block">Credit hours completed</label>
                   <input inputMode="numeric" value={pDone} onChange={(e) => setPDone(e.target.value)} className="np-input" />
                 </div>
                 <div>
-                  <label className="kicker mb-1 block">Credits next semester</label>
+                  <label className="kicker mb-1 block">Credit hours next semester</label>
                   <input inputMode="numeric" value={pNext} onChange={(e) => setPNext(e.target.value)} className="np-input" />
                 </div>
                 <div>
@@ -330,36 +339,30 @@ export default function Page() {
               </div>
             </section>
 
-            {/* forecast verdict */}
-            <aside className="md:sticky md:top-5 h-fit ink-box p-6 text-center">
-              {plan.status === "invalid" ? (
-                <p className="py-8 italic text-[var(--muted)]">The desk needs valid figures — a target between 0 and 4, and next-semester credits above zero.</p>
-              ) : (
-                <>
-                  <p className="kicker">{plan.status === "achieved" ? "Already secured" : "Average required next semester"}</p>
-                  <div className="double-rule mx-auto mt-2 w-16" />
-                  <div className="head my-2 text-7xl font-black tabular-nums">
-                    {plan.status === "impossible" ? "—" : fmt(Math.max(plan.requiredGpa, 0))}
-                  </div>
-                  <p className="kicker">grade-point average</p>
-                  <div className="rule-2 my-4" />
-                  <p className="head text-3xl font-black smallcaps">{verdict}</p>
-
-                  <p key={`v-${mode}-${plan.status}`} className="stamp mt-3 text-[0.95rem]">
-                    {plan.status === "achievable" && (
-                      <>Post about <b>{fmt(plan.requiredGpa)}</b> across your next <b>{parseFloat(pNext) || 0}</b> credits — roughly {/^[AF]/.test(plan.neededLetter ?? "") ? "an" : "a"} <b>{plan.neededLetter}</b> in every module — to reach <b>{fmt(parseFloat(pTarget) || 0)}</b>.</>
-                    )}
-                    {plan.status === "achieved" && (
-                      <>You clear <b>{fmt(parseFloat(pTarget) || 0)}</b> even after a poor semester. Aim higher — your ceiling is <b>{fmt(plan.maxReachable)}</b>.</>
-                    )}
-                    {plan.status === "impossible" && (
-                      <>Even a straight-A+ semester tops out at <b>{fmt(plan.maxReachable)}</b>. Lower the target or spread it over more semesters.</>
-                    )}
-                  </p>
-
-                  <p className="kicker mt-4 border-t border-[var(--faint)] pt-3">Best possible next semester · {fmt(plan.maxReachable)}</p>
-                </>
-              )}
+            {/* verdict */}
+            <aside className="h-fit md:sticky md:top-5">
+              <div className="ink-box p-6 text-center">
+                {plan.status === "invalid" ? (
+                  <p className="py-8 italic text-[var(--muted)]">The desk needs valid figures — a target between 0 and 4, and next-semester credit hours above zero.</p>
+                ) : (
+                  <>
+                    <p className="kicker">{plan.status === "achieved" ? "Already secured" : "Average required next semester"}</p>
+                    <div className="double-rule mx-auto mt-2 w-16" />
+                    <div className="head my-2 font-black tabular-nums" style={{ fontSize: "clamp(3.5rem, 12vw, 5rem)" }}>
+                      {plan.status === "impossible" ? "—" : fmt(Math.max(plan.requiredGpa, 0))}
+                    </div>
+                    <p className="kicker">grade-point average</p>
+                    <div className="rule-2 my-4" />
+                    <p className="head text-3xl font-black smallcaps">{verdict}</p>
+                    <p key={`v-${plan.status}-${fmt(plan.requiredGpa)}`} className="stamp mt-3 text-[0.95rem]">
+                      {plan.status === "achievable" && (<>Post about <b>{fmt(plan.requiredGpa)}</b> across your next <b>{parseFloat(pNext) || 0}</b> credit hours — roughly {/^[AF]/.test(plan.neededLetter ?? "") ? "an" : "a"} <b>{plan.neededLetter}</b> in every module — to reach <b>{fmt(parseFloat(pTarget) || 0)}</b>.</>)}
+                      {plan.status === "achieved" && (<>You clear <b>{fmt(parseFloat(pTarget) || 0)}</b> even after a poor semester. Aim higher — your ceiling is <b>{fmt(plan.maxReachable)}</b>.</>)}
+                      {plan.status === "impossible" && (<>Even a straight-A+ semester tops out at <b>{fmt(plan.maxReachable)}</b>. Lower the target or spread it over more semesters.</>)}
+                    </p>
+                    <p className="kicker mt-4 border-t border-[var(--faint)] pt-3">Best possible next semester · {fmt(plan.maxReachable)}</p>
+                  </>
+                )}
+              </div>
             </aside>
           </div>
         )}
@@ -369,18 +372,20 @@ export default function Page() {
       <section className="mt-12">
         <div className="rule-2" />
         <h3 className="head py-2 text-center text-xl font-black smallcaps">The APU Grade Scale — For the Record</h3>
-        <div className="rule mb-4" />
-        <div className="grid grid-cols-2 gap-x-8 gap-y-1 sm:grid-cols-3">
-          {GRADES.map((g) => (
-            <div key={g.letter} className="flex items-baseline justify-between border-b border-[var(--faint)] py-1.5">
-              <span className="head font-black">{g.letter}</span>
-              <span className="text-[var(--muted)] text-sm">{g.min}–{g.max}</span>
+        <div className="border-y-2 border-[var(--ink)] sm:grid sm:grid-cols-3">
+          {GRADES.map((g, i) => (
+            <div
+              key={g.letter}
+              className={`flex items-baseline justify-between gap-3 border-b border-[var(--faint)] px-1 py-2 sm:px-4 ${i % 3 !== 0 ? "sm:border-l sm:border-[var(--faint)]" : ""}`}
+            >
+              <span className="head text-lg font-black">{g.letter}</span>
+              <span className="text-sm text-[var(--muted)]">{g.min}&ndash;{g.max}</span>
               <span className={`head font-black tabular-nums ${g.point >= PASS_POINT ? "" : "text-[var(--muted)]"}`}>{g.point.toFixed(1)}</span>
             </div>
           ))}
         </div>
         <p className="kicker mt-3" style={{ textTransform: "none", letterSpacing: 0 }}>
-          <span className="italic">Note.</span> C&minus; (2.0) and above is a module pass. The CGPA is the credit-weighted average of grade points.
+          <span className="italic">Note.</span> C&minus; (2.0) and above is a module pass. The CGPA is the credit-weighted average of grade points across all graded modules.
         </p>
       </section>
 
