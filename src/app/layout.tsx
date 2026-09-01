@@ -1,44 +1,48 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Playfair_Display, PT_Serif, UnifrakturCook } from "next/font/google";
 import "./globals.css";
 
-const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
-const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
+const head = Playfair_Display({
+  variable: "--font-head",
+  subsets: ["latin"],
+  weight: ["400", "700", "800", "900"],
+  style: ["normal", "italic"],
+});
+const body = PT_Serif({
+  variable: "--font-body",
+  subsets: ["latin"],
+  weight: ["400", "700"],
+  style: ["normal", "italic"],
+});
+const nameplate = UnifrakturCook({
+  variable: "--font-plate",
+  subsets: ["latin"],
+  weight: ["700"],
+});
 
 export const metadata: Metadata = {
-  title: "APU CGPA Calculator — plan your grades",
+  title: "APU CGPA Calculator — The Grade Gazette",
   description:
-    "A clean CGPA calculator for Asia Pacific University (APU) students. Work out your semester GPA and cumulative CGPA, and plan the grades you need next semester to hit a target.",
-  keywords: [
-    "APU CGPA calculator",
-    "Asia Pacific University",
-    "GPA calculator",
-    "CGPA",
-    "grade planner",
-  ],
+    "A CGPA calculator and grade planner for Asia Pacific University (APU) students, set like a broadsheet newspaper. Work out your semester GPA and cumulative CGPA, and plan what you need next semester to hit a target.",
+  keywords: ["APU CGPA calculator", "Asia Pacific University", "GPA calculator", "CGPA", "grade planner"],
   openGraph: {
-    title: "APU CGPA Calculator",
-    description:
-      "Calculate your APU GPA and CGPA, and plan what you need next semester to reach your target.",
+    title: "APU CGPA Calculator — The Grade Gazette",
+    description: "Calculate your APU GPA and CGPA, and plan what you need next semester to reach your target.",
     type: "website",
   },
 };
 
-export const viewport: Viewport = {
-  themeColor: "#080b16",
-};
+export const viewport: Viewport = { themeColor: "#f3efe4" };
 
-const themeInit = `(function(){try{var t=localStorage.getItem('apu-theme');var d=t?t==='dark':window.matchMedia('(prefers-color-scheme: dark)').matches;if(d)document.documentElement.classList.add('dark');}catch(e){}})();`;
+const themeInit = `(function(){try{var t=localStorage.getItem('apu-theme');if(t==='dark')document.documentElement.classList.add('dark');}catch(e){}})();`;
 
-export default function RootLayout({
-  children,
-}: Readonly<{ children: React.ReactNode }>) {
+export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeInit }} />
       </head>
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased font-sans`}>
+      <body className={`${head.variable} ${body.variable} ${nameplate.variable} antialiased`}>
         {children}
       </body>
     </html>
