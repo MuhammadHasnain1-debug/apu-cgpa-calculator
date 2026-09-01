@@ -1,15 +1,15 @@
 <div align="center">
 
-<img src="screenshots/banner.png" alt="APU CGPA Calculator" width="100%">
+<img src="screenshots/banner.png" alt="The Grade Gazette — APU CGPA Calculator" width="100%">
 
-# APU CGPA Calculator
+# APU CGPA Calculator · *The Grade Gazette*
 
-**A clean CGPA calculator and grade planner for Asia Pacific University (APU) students.**
-Work out your semester GPA and cumulative CGPA — then find exactly what you need next semester to hit your target.
+**A CGPA calculator and grade planner for Asia Pacific University (APU) students, set like a black-and-white broadsheet newspaper.**
+Work out your semester GPA and cumulative CGPA — then turn to the Forecast Desk to find exactly what you need next semester to hit your target.
 
 <br>
 
-[![Live Demo](https://img.shields.io/badge/▶%20%20Live%20Demo-6d28d9?style=for-the-badge&labelColor=0b1020)](https://muhammadhasnain1-debug.github.io/apu-cgpa-calculator/)
+[![Live Demo](https://img.shields.io/badge/▶%20%20Read%20the%20Gazette-17130d?style=for-the-badge&labelColor=3a352c)](https://muhammadhasnain1-debug.github.io/apu-cgpa-calculator/)
 [![Deploy with Vercel](https://img.shields.io/badge/▲%20Deploy%20on%20Vercel-000?style=for-the-badge)](https://vercel.com/new/clone?repository-url=https://github.com/MuhammadHasnain1-debug/apu-cgpa-calculator)
 
 ![Next.js](https://img.shields.io/badge/Next.js-16-000?logo=nextdotjs)
@@ -28,7 +28,7 @@ Work out your semester GPA and cumulative CGPA — then find exactly what you ne
 - **Honest by the numbers** — if a target is mathematically impossible with the credits you have left, it says so (and shows the ceiling) instead of pretending.
 - **Standing at a glance** — an indicative honours class (First Class, Second Upper, …) for your current CGPA.
 - **Private & instant** — 100% client-side, **no database, no sign-in**. Your grades never leave the browser; entries are remembered via `localStorage`.
-- **Light / dark theme**, responsive, keyboard-friendly, `prefers-reduced-motion` aware.
+- **Newspaper styling** — a blackletter masthead, halftone photo and a print-press animation when you switch between the *Results Desk* and *Forecast Desk*, with a **Day / Night edition** toggle. Fully responsive and `prefers-reduced-motion` aware.
 
 ---
 
