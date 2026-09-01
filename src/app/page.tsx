@@ -114,7 +114,7 @@ export default function Page() {
   const verdict = plan.status === "achievable" ? "Achievable" : plan.status === "achieved" ? "Locked In" : plan.status === "impossible" ? "Out of Reach" : "—";
 
   return (
-    <div className="relative z-10 mx-auto w-full max-w-[1500px] px-4 pb-14 pt-4 sm:px-8">
+    <div className="relative z-10 w-full px-4 pb-14 pt-4 sm:px-6 lg:px-10 2xl:px-16">
       {/* top matter */}
       <div className="flex items-center justify-between kicker">
         <span>Vol. IV · No. 26</span>
